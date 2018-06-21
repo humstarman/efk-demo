@@ -18,6 +18,8 @@ spec:
             - name: host-time
               mountPath: /etc/localtime
               readOnly: true
+      nodeSelector:
+        beta.kubernetes.io/fluentd-ds-ready: "true"
       volumes:
         - name: host-time
           hostPath:
