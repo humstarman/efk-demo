@@ -1,0 +1,24 @@
+kind: Deployment 
+apiVersion: extensions/v1beta1
+metadata:
+  namespace: default 
+  name: efk-log-generator-controller
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        component: efk-log-generator
+    spec:
+      containers:
+        - name: efk-log-generator
+          image: 172.31.78.217:5000/efk-log-generator
+          command: ["/entrypoint.sh"]
+          volumeMounts:
+            - name: host-time
+              mountPath: /etc/localtime
+              readOnly: true
+      volumes:
+        - name: host-time
+          hostPath:
+            path: /etc/localtime
