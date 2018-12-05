@@ -2,20 +2,24 @@ kind: Deployment
 apiVersion: extensions/v1beta1
 metadata:
   namespace: default 
-  name: log-generator 
+  name: file-log 
   labels:
-    app: log-generator
+    app: file-log
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        component: log-generator 
+        component: file-log 
     spec:
       containers:
-        - name: log-generator 
+        - name: file-log 
           image: centos:7 
+          imagePullPolicy: IfNotPresent 
           command: ["/workspace/entrypoint.sh"]
+          args:
+            - -l
+            - /cached/access.log 
           volumeMounts:
             - name: host-time
               mountPath: /etc/localtime
@@ -23,6 +27,24 @@ spec:
             - name: entrypoint
               mountPath: /workspace
               readOnly: true
+            - name: cached 
+              mountPath: /cached
+        - name: logger 
+          image: alpine:latest 
+          imagePullPolicy: IfNotPresent 
+          command: ["tail"]
+          args:
+            - -f
+            - /cached/access.log 
+          volumeMounts:
+            - name: host-time
+              mountPath: /etc/localtime
+              readOnly: true
+            - name: entrypoint
+              mountPath: /workspace
+              readOnly: true
+            - name: cached 
+              mountPath: /cached
       nodeSelector:
         beta.kubernetes.io/fluentd-ds-ready: "true"
       volumes:
@@ -31,5 +53,7 @@ spec:
             path: /etc/localtime
         - name: entrypoint 
           configMap:
-            name: log-generator-config 
+            name: file-log-config 
             defaultMode: 0755
+        - name: cached 
+          emptyDir: {}
